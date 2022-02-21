@@ -75,7 +75,18 @@ ifeq ($(CONTAINER_ENGINE),)
 	CONTAINER_ENGINE := docker
 endif
 
-DOCKER_BASE = $(CONTAINER_ENGINE) run --rm -v $(SRC):$(SRC)$(CONTAINER_MOUNT_OPTS) -v $(OBJ):$(OBJ)$(CONTAINER_MOUNT_OPTS) \
+src_path := $(shell readlink -m $(SRC))
+obj_path := $(shell readlink -m $(OBJ))
+
+ifeq ($(src_path),$(obj_path))
+	mounts := -v $(SRC):$(SRC)$(CONTAINER_MOUNT_OPTS)
+else
+	mounts := -v $(SRC):$(SRC)$(CONTAINER_MOUNT_OPTS) -v $(OBJ):$(OBJ)$(CONTAINER_MOUNT_OPTS)
+endif
+
+
+
+DOCKER_BASE = $(CONTAINER_ENGINE) run --rm $(mounts) \
                 -w $(OBJ) -e MAKEFLAGS \
                 $(DOCKER_OPTS) $(STEAMRT_IMAGE)
 
